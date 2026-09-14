@@ -9,43 +9,37 @@
 # =============================================================================
 
 team:
-  name: ""                             # REQUIRED — e.g., "Orion Squad"
-  track: ""                            # REQUIRED — one of: AI | DevOps | Sustainability | Open
+  name: "Lazy Coders"                             # REQUIRED — e.g., "Orion Squad"
+  track: "AI"                            # REQUIRED — one of: AI | DevOps | Sustainability | Open
   lead:
-    name: ""                           # REQUIRED — e.g., "Alice Chen"
-    email: ""                          # REQUIRED — e.g., "alice.chen@ibm.com"
+    name: "Chetan"                           # REQUIRED — e.g., "Alice Chen"
+    email: "chetan@example.com"                          # REQUIRED — e.g., "alice.chen@ibm.com"
   members:
     - name: ""                         # REQUIRED — Team member 1
       email: ""
-    - name: ""                         # Add more members by copying the two lines above
-      email: ""
-    - name: ""
-      email: ""
 
 submission:
-  title: ""                            # REQUIRED — Project display name, e.g., "SmartOps Dashboard"
+  title: "Grid Guardian"                            # REQUIRED — Project display name, e.g., "SmartOps Dashboard"
 
   problem_statement: >                 # REQUIRED — 1-3 sentences. What problem? Who has it?
-    Replace this text with a concise description of the real-world problem
-    your project addresses and who experiences it.
+    Electrical grid operators struggle to predict equipment failures and proactively deploy maintenance crews, leading to widespread outages, costly emergency repairs, and increased risks to critical infrastructure.
 
   solution_summary: >                  # REQUIRED — 1-3 sentences. What did you build?
-    Replace this text with a clear description of your solution
-    and how it addresses the problem above.
+    Grid Guardian is an AI-powered electrical-grid risk-assessment tool that predicts equipment failures and scores the downstream "blast radius" impact. It provides actionable crew pre-positioning plans and a watsonx-powered narrative interface via an MCP server integration.
 
   key_features:                        # REQUIRED — List 3 to 5 specific features you implemented
-    - ""                               # e.g., "Real-time pipeline anomaly detection using watsonx.ai"
-    - ""
-    - ""
-    - ""                               # optional 4th
-    - ""                               # optional 5th
+    - "Predictive failure modeling based on sensor telemetry"
+    - "Blast-radius scoring to prioritize high-impact outages"
+    - "Geospatial crew pre-positioning algorithm"
+    - "watsonx.ai narrative layer for actionable incident briefs"
+    - "Interactive Vite+React dashboard for grid visualization"
 
   tech_stack:
-    languages: []                      # REQUIRED — e.g., ["Python", "TypeScript"]
-    frameworks: []                     # e.g., ["FastAPI", "React"]
-    ibm_technologies: []               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
+    languages: ["Python", "JavaScript"]                      # REQUIRED — e.g., ["Python", "TypeScript"]
+    frameworks: ["FastAPI", "React", "Vite"]                     # e.g., ["FastAPI", "React"]
+    ibm_technologies: ["watsonx.ai", "IBM Bob"]               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
     databases: []                      # e.g., ["PostgreSQL", "Redis"]
-    other: []                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
+    other: ["FastMCP"]                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
 
   what_we_are_most_proud_of: >         # Optional but recommended — guides judges to your best work
     Replace with what aspect of the submission you consider strongest

@@ -1,0 +1,492 @@
+/* Grid Guardian Dashboard Styles */
+
+:root {
+  --bg-dark: #0f1923;
+  --bg-panel: #1a2633;
+  --bg-card: #223344;
+  --text-primary: #e0e8f0;
+  --text-secondary: #8899aa;
+  --accent: #00bfff;
+  --danger: #ff4444;
+  --warning: #ffaa00;
+  --success: #44cc44;
+  --border: #2a3a4a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── App Layout ──────────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--bg-panel);
+  border-bottom: 2px solid var(--accent);
+}
+
+.app-header h1 {
+  font-size: 1.5rem;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  padding: 0 24px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.main-content {
+  flex: 1;
+  padding: 16px 24px;
+  overflow-y: auto;
+}
+
+.app-footer {
+  padding: 10px 24px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Panels ──────────────────────────────────────── */
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panel h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  color: var(--accent);
+}
+
+.panel.loading, .panel.error {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.panel.error {
+  color: var(--danger);
+}
+
+/* ── Grid Layout (map + assets side by side) ─────── */
+
+.grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Grid Map ────────────────────────────────────── */
+
+.grid-map-panel {
+  min-height: 400px;
+}
+
+.grid-legend {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.grid-svg {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  max-height: 500px;
+}
+
+/* ── Asset Table ─────────────────────────────────── */
+
+.asset-table-wrap {
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.asset-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.asset-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.asset-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.asset-table tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.asset-table tr:hover {
+  background: rgba(0, 191, 255, 0.08);
+}
+
+.asset-table tr.selected {
+  background: rgba(0, 191, 255, 0.15);
+}
+
+.asset-id {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.score {
+  font-weight: 700;
+}
+
+/* ── Asset Detail ────────────────────────────────── */
+
+.asset-detail {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.asset-detail h3 {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-card {
+  background: var(--bg-card);
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+
+.detail-card .label {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.detail-card .value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.detail-card .value.danger {
+  color: var(--danger);
+}
+
+.detail-card .value.ok {
+  color: var(--success);
+}
+
+/* ── Sensor Bars ─────────────────────────────────── */
+
+.sensor-readings h4, .signals h4 {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.sensor-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.75rem;
+}
+
+.sensor-label {
+  width: 70px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.sensor-bar-bg {
+  flex: 1;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.sensor-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s;
+}
+
+.sensor-bar-fill.ok {
+  background: var(--success);
+}
+
+.sensor-bar-fill.warn {
+  background: var(--danger);
+}
+
+.sensor-val {
+  width: 40px;
+  text-align: right;
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+
+/* ── Signal Tags ─────────────────────────────────── */
+
+.signal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.signal-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(255, 170, 0, 0.15);
+  color: var(--warning);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  border-radius: 12px;
+  font-size: 0.7rem;
+}
+
+/* ── Crew Plan Table ─────────────────────────────── */
+
+.crew-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.crew-table th {
+  text-align: left;
+  padding: 8px 10px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.crew-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.crew-id {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.eta {
+  font-weight: 600;
+}
+
+.reason {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.generated-at {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.unassigned-warning {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 6px;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.unassigned-warning p {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* ── Chat Panel ──────────────────────────────────── */
+
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 180px);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  min-height: 200px;
+  max-height: 500px;
+}
+
+.chat-msg {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.chat-msg.user {
+  background: rgba(0, 191, 255, 0.12);
+  border: 1px solid rgba(0, 191, 255, 0.25);
+  margin-left: 40px;
+}
+
+.chat-msg.assistant {
+  background: var(--bg-card);
+  margin-right: 40px;
+}
+
+.chat-msg.error .msg-content {
+  color: var(--danger);
+}
+
+.loading-msg {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.msg-meta {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.chat-input-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.chat-input-row button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.chat-input-row button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.chat-input-row button:hover:not(:disabled) {
+  opacity: 0.85;
+}
