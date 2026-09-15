@@ -1,6 +1,6 @@
-https://grid-guardian-production.up.railway.app
+https://bob-ai-hackathon-lazy-coders-production.up.railway.app/
 
 Live dashboard served by Railway — one URL for the React dashboard, REST API, and remote MCP server.
 
-MCP endpoint for IBM Bob: https://grid-guardian-production.up.railway.app/mcp
-API docs:                  https://grid-guardian-production.up.railway.app/docs
+MCP endpoint for IBM Bob: https://bob-ai-hackathon-lazy-coders-production.up.railway.app/mcp
+API docs:                  https://bob-ai-hackathon-lazy-coders-production.up.railway.app/docs

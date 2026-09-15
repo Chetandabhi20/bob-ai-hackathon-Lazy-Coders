@@ -14,9 +14,7 @@ team:
   lead:
     name: "Chetan"                           # REQUIRED — e.g., "Alice Chen"
     email: "chetan@example.com"                          # REQUIRED — e.g., "alice.chen@ibm.com"
-  members:
-    - name: ""                         # REQUIRED — Team member 1
-      email: ""
+  members: []
 
 submission:
   title: "Grid Guardian"                            # REQUIRED — Project display name, e.g., "SmartOps Dashboard"
