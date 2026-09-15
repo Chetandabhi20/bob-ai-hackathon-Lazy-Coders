@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # HACKATHON SUBMISSION — .gitignore
 # =============================================================================
 # IMPORTANT: Never commit secrets, credentials, or large binary files.
@@ -95,3 +95,11 @@ logs/
 .terraform/
 *.tfstate
 *.tfstate.backup
+
+# Override: keep generated data files tracked for Docker/Railway build
+!src/data/
+!src/data/generated/
+!src/data/generated/grid_topology.json
+!src/data/generated/sensor_readings.csv
+!src/data/generated/incident_history.csv
+
