@@ -2,6 +2,7 @@
 
 [phases.setup]
 nixPkgs = ["python311", "nodejs_20"]
+aptPkgs = ["libstdc++6"]
 
 [phases.install]
 cmds = [
@@ -11,11 +12,14 @@ cmds = [
   "/opt/venv/bin/pip install --upgrade pip",
   "/opt/venv/bin/pip install -r src/requirements.txt",
   # Node.js dependencies + production build of the React frontend
-  "cd src/frontend && npm ci && npm run build"
+  "cd src/frontend && npm ci && npm run build",
+  # Copy Nix's libstdc++ to a standard path so numpy C-extensions find it at runtime
+  "cp $(find /nix/store -name 'libstdc++.so.6' -print -quit) /usr/lib/ || true",
+  "ldconfig || true"
 ]
 
 [start]
-cmd = "cd src && /opt/venv/bin/python -m api.server"
+cmd = "export LD_LIBRARY_PATH=/usr/lib:$(dirname $(find /nix/store -name 'libstdc++.so.6' -print -quit) 2>/dev/null):$LD_LIBRARY_PATH && cd src && /opt/venv/bin/python -m api.server"
 
 [variables]
 PYTHONUNBUFFERED = "1"
