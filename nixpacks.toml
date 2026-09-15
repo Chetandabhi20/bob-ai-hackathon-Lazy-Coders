@@ -4,10 +4,14 @@
 # in the same build, letting us: pip install → npm build → start FastAPI.
 
 [phases.setup]
-nixPkgs = ["python311", "python311Packages.pip", "nodejs_20"]
+nixPkgs = ["python311", "nodejs_20"]
 
 [phases.install]
 cmds = [
+  # Bootstrap pip inside the Nix Python (python311Packages.pip doesn't
+  # register as a Python module, so `python3 -m pip` fails without this).
+  "python3 -m ensurepip --upgrade",
+  "python3 -m pip install --upgrade pip",
   # Python dependencies
   "python3 -m pip install -r src/requirements.txt",
   # Node.js dependencies + production build of the React frontend
