@@ -1,7 +1,7 @@
 # nixpacks.toml — Build configuration for Railway
 
 [phases.setup]
-nixPkgs = ["python311", "nodejs_20"]
+nixPkgs = ["python311", "nodejs_22"]
 
 [phases.install]
 cmds = [
