@@ -4,7 +4,7 @@
 # in the same build, letting us: pip install → npm build → start FastAPI.
 
 [phases.setup]
-nixPkgs = ["python311", "nodejs_20", "npm-9_x"]
+nixPkgs = ["python311", "nodejs_20"]
 
 [phases.install]
 cmds = [
