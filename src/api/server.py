@@ -48,6 +48,28 @@ from data.weather_client import WeatherClientError
 
 logger = logging.getLogger(__name__)
 
+from contextlib import asynccontextmanager
+
+# Build the MCP ASGI sub-app early so we can wire its lifespan
+_mcp_asgi = None
+try:
+    from mcp_server.server import mcp as _mcp_instance
+    _mcp_asgi = _mcp_instance.http_app(path="/")
+    logger.info("MCP ASGI app built successfully")
+except Exception as _mcp_err:
+    logger.warning("Could not build MCP ASGI app: %s", _mcp_err)
+
+
+@asynccontextmanager
+async def _lifespan(app):
+    """Run the MCP sub-app's lifespan alongside FastAPI's."""
+    if _mcp_asgi is not None and hasattr(_mcp_asgi, "lifespan"):
+        async with _mcp_asgi.lifespan(_mcp_asgi):
+            yield
+    else:
+        yield
+
+
 app = FastAPI(
     title="Grid Guardian API",
     description=(
@@ -55,7 +77,13 @@ app = FastAPI(
         "Connect IBM Bob to /mcp for live grid intelligence tools."
     ),
     version="1.0.0",
+    lifespan=_lifespan,
 )
+
+# Mount MCP ASGI app
+if _mcp_asgi:
+    app.mount("/mcp", _mcp_asgi)
+    logger.info("MCP Streamable HTTP endpoint mounted at /mcp")
 
 # CORS: allow Vite dev server locally AND any Railway/deployed origin
 _ALLOWED_ORIGINS = [
@@ -320,19 +348,7 @@ def api_chat(body: dict = None):
 # ── MCP Streamable HTTP endpoint ──────────────────────────────────────────
 # Mount FastMCP's ASGI app at /mcp so remote Bob clients can connect via:
 #   { "type": "streamable-http", "url": "https://<host>/mcp" }
-
-def _build_mcp_asgi():
-    """Build the FastMCP ASGI app that handles Streamable HTTP transport."""
-    from mcp_server.server import mcp
-    return mcp.http_app(path="/")   # path is relative to the mount point
-
-try:
-    _mcp_asgi = _build_mcp_asgi()
-    app.mount("/mcp", _mcp_asgi)
-    logger.info("MCP Streamable HTTP endpoint mounted at /mcp")
-except Exception as _mcp_err:
-    logger.warning("Could not mount MCP ASGI app: %s", _mcp_err)
-
+# (Now handled near the top of the file to support ASGI lifespan)
 
 # ── Static files (production React build) ─────────────────────────────────
 # Only mounted when the Vite dist folder exists (i.e. in production on Railway
