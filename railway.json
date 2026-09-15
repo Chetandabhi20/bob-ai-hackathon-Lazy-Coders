@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "export LD_LIBRARY_PATH=/usr/lib:$(dirname $(find /nix/store -name 'libstdc++.so.6' -print -quit) 2>/dev/null):$LD_LIBRARY_PATH && cd src && /opt/venv/bin/python -m api.server",
+    "startCommand": "export LD_LIBRARY_PATH=$(cat /opt/nix-lib-path):$LD_LIBRARY_PATH && cd src && /opt/venv/bin/python -m api.server",
     "healthcheckPath": "/api/ranked-assets",
     "healthcheckTimeout": 60,
     "restartPolicyType": "ON_FAILURE",
