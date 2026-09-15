@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd src && python -m api.server",
+    "startCommand": "cd src && /opt/venv/bin/python -m api.server",
     "healthcheckPath": "/api/ranked-assets",
     "healthcheckTimeout": 60,
     "restartPolicyType": "ON_FAILURE",

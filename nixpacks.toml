@@ -1,27 +1,22 @@
 # nixpacks.toml — Build configuration for Railway
-# Railway uses Nixpacks to detect and build the project automatically.
-# This file overrides defaults so both Python and Node.js are available
-# in the same build, letting us: pip install → npm build → start FastAPI.
 
 [phases.setup]
 nixPkgs = ["python311", "nodejs_20"]
 
 [phases.install]
 cmds = [
-  # Bootstrap pip inside the Nix Python (python311Packages.pip doesn't
-  # register as a Python module, so `python3 -m pip` fails without this).
-  "python3 -m ensurepip --upgrade",
-  "python3 -m pip install --upgrade pip",
-  # Python dependencies
-  "python3 -m pip install -r src/requirements.txt",
+  # Create a venv (Nix Python is immutable — PEP 668 blocks direct pip install)
+  "python3 -m venv /opt/venv",
+  # Install Python dependencies inside the venv
+  "/opt/venv/bin/pip install --upgrade pip",
+  "/opt/venv/bin/pip install -r src/requirements.txt",
   # Node.js dependencies + production build of the React frontend
   "cd src/frontend && npm ci && npm run build"
 ]
 
 [start]
-cmd = "cd src && python -m api.server"
+cmd = "cd src && /opt/venv/bin/python -m api.server"
 
 [variables]
-# Railway injects PORT automatically; we read it in api/server.py
 PYTHONUNBUFFERED = "1"
 PYTHONPATH = "src"
