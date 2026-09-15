@@ -16,6 +16,14 @@ Run:
   python -m mcp_server              (stdio transport, for MCP clients)
 """
 
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load src/.env before any tool module is imported so that WATSONX_API_KEY
+# and friends are available when the MCP server process is spawned by Bob.
+load_dotenv(Path(__file__).parent.parent / ".env")
+
 from fastmcp import FastMCP
 
 from mcp_server.tools.get_asset_health import (

@@ -1,6 +1,4 @@
-# 🚀 [Your Project Title Here]
-
-> ⚠️ **Replace everything in `[ ]` brackets with your actual content before submission.**
+# 🚀 Grid Guardian
 
 ---
 
@@ -8,36 +6,32 @@
 
 | Field | Value |
 |---|---|
-| **Team Name** | [Your Team Name] |
-| **Track** | [AI / DevOps / Sustainability / Open] |
-| **Team Lead** | [Name] — [email@ibm.com] |
-| **Members** | [Name 1], [Name 2], [Name 3] |
+| **Team Name** | Lazy Coders |
+| **Track** | AI |
+| **Team Lead** | Chetan — chetan@example.com |
+| **Members** | (Solo) |
 
 ---
 
 ## 🎯 Problem Statement
 
-> In 2–3 sentences: What problem does your project solve? Who experiences this problem?
-
-[Describe the real-world problem your project addresses. Be specific about who the user is and what pain point they face.]
+Electrical grid operators struggle to predict equipment failures and proactively deploy maintenance crews, leading to widespread outages, costly emergency repairs, and increased risks to critical infrastructure. Currently, maintenance is calendar-based, and dispatching crews post-failure increases the $1M+/hour downtime costs.
 
 ---
 
 ## 💡 Solution
 
-> In 2–3 sentences: What did you build? How does it solve the problem above?
-
-[Describe your solution clearly. Explain the core mechanism — what makes it work.]
+Grid Guardian is an AI-powered electrical-grid risk-assessment tool that predicts equipment failures and scores the downstream "blast radius" impact. It provides actionable crew pre-positioning plans and a watsonx-powered narrative interface via an MCP server integration.
 
 ---
 
 ## ✨ Key Features
 
-- **Feature 1:** [Brief description — e.g., "Real-time anomaly detection using watsonx.ai"]
-- **Feature 2:** [Brief description]
-- **Feature 3:** [Brief description]
-- **Feature 4:** [Optional]
-- **Feature 5:** [Optional]
+- **Predictive failure modeling:** Analyzes sensor telemetry to predict component failure within a 14-day window.
+- **Blast-radius scoring:** A differentiator that maps grid topology to calculate downstream impact, prioritizing critical loads (like hospitals) and un-backed-up customers over redundant lines.
+- **Geospatial crew pre-positioning:** Optimizes crew deployment based on risk rank and distance.
+- **watsonx.ai integration:** Summarizes incidents into natural language, actionable briefs via IBM Granite.
+- **IBM Bob as the primary interface (MCP):** Bob is the conversational control plane — every risk query, crew deployment, and incident brief flows through 5 registered MCP tools. See [`docs/bob-demo.md`](docs/bob-demo.md) for a full live session transcript.
 
 ---
 
@@ -45,11 +39,11 @@
 
 | Category | Technologies |
 |---|---|
-| **Languages** | [e.g., Python, TypeScript] |
-| **Frameworks** | [e.g., FastAPI, React] |
-| **IBM Technologies** | [e.g., watsonx.ai, IBM Bob, IBM Cloud] |
-| **Databases** | [e.g., PostgreSQL, Redis] |
-| **Other** | [e.g., Docker, GitHub Actions] |
+| **Languages** | Python, JavaScript |
+| **Frameworks** | FastAPI, React, Vite |
+| **IBM Technologies** | watsonx.ai, IBM Bob, Granite Models |
+| **Databases** | None (File-based JSON/CSV data storage) |
+| **Other** | FastMCP, scikit-learn, Open-Meteo |
 
 ---
 
@@ -73,23 +67,49 @@
 
 ## ⚡ How to Run
 
-> **Copy these exact steps from your [`docs/setup-guide.md`](docs/setup-guide.md)**
+> **For the full instructions, see [`docs/setup-guide.md`](docs/setup-guide.md)**
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/[your-repo].git
-cd [your-repo]
+git clone https://github.com/Chetandabhi20/-bob-ai-hackathon-Lazy-Coders.git
+cd -bob-ai-hackathon-Lazy-Coders
 
-# 2. Install dependencies
-[your install command here]
+# 2. Set up Python backend
+cd src
+python -m venv .venv
+.\.venv\Scripts\activate  # Windows
+pip install -r requirements.txt
 
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your values
+# 3. Start Backend Server
+python -m api.server
 
-# 4. Run the project
-[your run command here]
+# 4. Start React Frontend (in a second terminal)
+cd ../src/frontend
+npm install
+npm run dev
 ```
+
+---
+
+## 🤖 IBM Bob Integration
+
+Bob is the **primary interface** for Grid Guardian. The MCP server exposes 5 tools that Bob calls natively — no web UI required to use the full analytical pipeline.
+
+```
+Ask Bob: "Give me a full incident brief for the duty manager"
+    → generate_incident_brief() chains: rank_assets() + generate_crew_plan() + watsonx.ai
+    → Returns a natural-language brief citing real asset IDs, sensor values, and crew ETAs
+```
+
+| Bob Query | MCP Tool Called | What it does |
+|---|---|---|
+| "What assets are at risk?" | `rank_at_risk_assets` | ML + blast-radius scoring across 25 assets |
+| "Health of TX-001" | `get_asset_health` | Sensor readings + failure probability + risk signals |
+| "What's the weather risk?" | `get_weather_risk` | Live Open-Meteo forecast + storm risk flag |
+| "Deploy crews now" | `generate_crew_plan` | Haversine geospatial optimizer → crew assignments + ETAs |
+| "Give me a full incident brief" | `generate_incident_brief` | All of the above + watsonx.ai Granite narrative |
+
+> **Full live session with real output:** [`docs/bob-demo.md`](docs/bob-demo.md)
 
 ---
 
@@ -101,21 +121,20 @@ cp .env.example .env
 | 🌐 Live Demo | [See demo/live-demo-url.txt](demo/live-demo-url.txt) |
 | 🖼️ Screenshots | [See demo/screenshots/](demo/screenshots/) |
 | 📊 Presentation | [See presentation/slides.pdf](presentation/) |
+| 🤖 Bob Live Session | [`docs/bob-demo.md`](docs/bob-demo.md) |
 
 ---
 
 ## ⚠️ Known Limitations
 
-> Be honest — judges appreciate transparency over overclaiming.
-
-- [Limitation 1: e.g., "Authentication is mocked — not production-ready"]
-- [Limitation 2: e.g., "Only tested on Chrome"]
-- [Limitation 3: e.g., "Feature X is scaffolded but not fully implemented"]
+- Real watsonx integration requires valid credentials; currently falls back to a template-driven `[STUB MODE]` to guarantee a working demo.
+- Predictive model uses a synthetic dataset of 2,250 rows due to hackathon time constraints.
+- Graph/map view relies on pre-generated static coordinates rather than real GIS data.
 
 ---
 
 ## 🏅 What We're Most Proud Of
 
-[Tell the judges what part of your submission is strongest and worth paying close attention to.]
+We are most proud of the **Blast-Radius Scoring System**. Instead of just returning probability like most generic ML models, we mapped the grid topology and created a domain-aware scoring mechanism that factors in un-backed-up customers and critical infrastructure (hospitals, schools) downstream. It fundamentally changes the output from "Transformer X will fail" to "Transformer X failing will drop a hospital, send a crew now."
 
 ---

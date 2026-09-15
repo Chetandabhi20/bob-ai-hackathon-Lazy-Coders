@@ -54,7 +54,7 @@ export function getCrewPlan() {
   return fetchJSON(`${BASE}/crew-plan`);
 }
 
-/** Chat / incident brief */
-export function sendChat(topN = 5) {
-  return postJSON(`${BASE}/chat`, { top_n: topN });
+/** Chat / incident brief — sends the user message for intent routing */
+export function sendChat(message = '') {
+  return postJSON(`${BASE}/chat`, { message });
 }

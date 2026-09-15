@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "grid-guardian": {
+      "command": "python",
+      "args": ["-m", "mcp_server"],
+      "cwd": "<ABSOLUTE_PATH_TO_YOUR_CLONED_REPO>/src",
+      "alwaysAllow": [
+        "get_asset_health",
+        "get_weather_risk",
+        "rank_at_risk_assets",
+        "generate_crew_plan",
+        "generate_incident_brief"
+      ]
+    }
+  }
+}

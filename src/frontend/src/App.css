@@ -421,7 +421,6 @@ body {
   border-radius: 8px;
   font-size: 0.85rem;
   line-height: 1.5;
-  white-space: pre-wrap;
 }
 
 .chat-msg.user {
@@ -489,4 +488,59 @@ body {
 
 .chat-input-row button:hover:not(:disabled) {
   opacity: 0.85;
+}
+
+/* ── Intent Badge ────────────────────────────────── */
+
+.intent-badge {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: rgba(0, 191, 255, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(0, 191, 255, 0.3);
+}
+
+/* ── Suggestion Chips ────────────────────────────── */
+
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.suggestion-chip {
+  padding: 5px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.suggestion-chip:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Chat message markdown rendering ─────────────── */
+
+.msg-content ul {
+  margin: 4px 0 4px 18px;
+}
+
+.msg-content li {
+  margin-bottom: 2px;
+}
+
+.msg-content strong {
+  color: var(--text-primary);
+  font-weight: 600;
 }

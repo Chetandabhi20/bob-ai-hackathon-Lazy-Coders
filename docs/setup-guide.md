@@ -62,6 +62,46 @@ cd ..
 
 ## Running the Application
 
+### Option A — IBM Bob (Primary Interface)
+
+Bob is the primary interface. Start the MCP server and talk to the grid
+using natural language.
+
+**Step 1: Configure Bob Integration**
+Because `.bob` folders are ignored in the repository template, you must manually create the Bob configuration file on your machine:
+```bash
+# In the root of the project:
+mkdir .bob
+cp mcp.example.json .bob/mcp.json
+```
+*CRITICAL:* Open `.bob/mcp.json` and replace `<ABSOLUTE_PATH_TO_YOUR_CLONED_REPO>` with the actual absolute path to where you cloned this repository on your machine. Also ensure the `command` correctly points to your python executable (e.g., `python`, `python3`, or the absolute path to your virtual environment's python).
+
+**Step 2: Start the MCP server**
+```bash
+cd src
+# (Ensure venv is activated)
+python -m mcp_server
+```
+
+**Step 3: Open IBM Bob** in the repo root directory.
+The `grid-guardian` MCP server in `.bob/mcp.json` will now register automatically.
+
+**Sample queries to try:**
+```
+"What assets are at risk right now?"
+"Give me the full health report for TX-001"
+"What is the current weather risk for the grid?"
+"Deploy crews to the highest-risk assets"
+"Give me a full incident brief for the duty manager"
+```
+
+> See [`docs/bob-demo.md`](../docs/bob-demo.md) for the full live session
+> transcript with real output from all 5 MCP tools.
+
+---
+
+### Option B — React Dashboard (Visual Interface)
+
 You will need two terminal windows.
 
 **Terminal 1: Start the Backend API Server**
@@ -77,9 +117,7 @@ cd src/frontend
 npm run dev
 ```
 
-The application will be available at: `http://localhost:5173`
-
-*(Note: The MCP stdio server for Bob integration can be run via `cd src && python -m mcp_server`)*
+The dashboard will be available at: `http://localhost:5173`
 
 ## Running Tests
 

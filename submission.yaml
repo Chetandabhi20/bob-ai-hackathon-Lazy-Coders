@@ -42,12 +42,26 @@ submission:
     other: ["FastMCP"]                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
 
   what_we_are_most_proud_of: >         # Optional but recommended — guides judges to your best work
-    Replace with what aspect of the submission you consider strongest
-    and want judges to pay special attention to.
+    The Blast-Radius Scoring System combined with live weather fusion. Most
+    ML-based grid tools rank assets by failure probability alone. We built a
+    directed graph traversal over the grid topology that computes how many
+    customers and which critical loads (hospitals, water treatment) would lose
+    power if each asset failed, then applied a live weather multiplier from
+    Open-Meteo so that an incoming storm automatically escalates all asset
+    priorities. The result changes the output from "Transformer X will fail"
+    to "Transformer X failing will drop a hospital during a storm — send a
+    crew now." Judges should read docs/bob-demo.md to see this in action
+    through Bob's MCP tool calls with real live output.
 
   known_limitations: >                 # Optional but recommended — be honest about gaps
-    Replace with any known limitations, incomplete features,
-    or shortcuts taken due to time constraints.
+    The predictive model is trained on a synthetic dataset of 2,250 rows
+    across 25 simulated assets due to hackathon time constraints; a production
+    deployment would use real SCADA telemetry. The grid topology uses
+    pre-generated static coordinates rather than real GIS data. The watsonx.ai
+    narrative layer falls back to a structured template stub when credentials
+    are not provided, though the stub still references real asset IDs and
+    scores. The crew optimizer uses a greedy nearest-crew heuristic rather
+    than a globally-optimal assignment algorithm.
 
 # =============================================================================
 # ARTIFACT LOCATIONS

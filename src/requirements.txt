@@ -16,6 +16,9 @@ httpx>=0.27.0
 # MCP server (Phase 3)
 fastmcp>=2.0.0
 
+# IBM watsonx.ai (Phase 4)
+ibm-watsonx-ai>=1.7.0
+
 # Serialization
 python-dotenv>=1.0.0
 

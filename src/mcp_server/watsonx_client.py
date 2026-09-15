@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 # ── Configuration ──────────────────────────────────────────────────────────
 
 # watsonx model to use for text generation (IBM Granite is a safe default)
-WATSONX_MODEL_ID = os.environ.get("WATSONX_MODEL_ID", "ibm/granite-3-8b-instruct")
+WATSONX_MODEL_ID = os.environ.get("WATSONX_MODEL_ID", "meta-llama/llama-3-3-70b-instruct")
 
 # Maximum tokens for the generated brief
 MAX_TOKENS = 600
@@ -69,6 +69,20 @@ def _build_prompt(ranked_assets: list[dict], crew_plan: dict) -> str:
     for a grid operations manager. It embeds the structured data directly
     so the LLM has concrete numbers to cite.
     """
+    # Extract weather context from the first ranked asset (all share the same value)
+    weather_risk = ranked_assets[0].get("weather_risk", "low") if ranked_assets else "low"
+    weather_multiplier = ranked_assets[0].get("weather_multiplier", 1.0) if ranked_assets else 1.0
+    weather_block = (
+        f"LIVE WEATHER CONTEXT:\n"
+        f"  Storm risk for grid area: {weather_risk.upper()} "
+        f"(priority scores scaled by ×{weather_multiplier:.2f})\n"
+        + (
+            "  ⚠️ Incoming storm conditions are actively increasing failure urgency for all assets.\n"
+            if weather_risk in ("moderate", "high") else
+            "  Weather conditions are within normal operational tolerance.\n"
+        )
+    )
+
     # Format top assets
     top_assets = ranked_assets[:5]
     asset_lines = []
@@ -103,7 +117,8 @@ def _build_prompt(ranked_assets: list[dict], crew_plan: dict) -> str:
 
     prompt = f"""You are an AI assistant for a power grid operations center. Write a concise incident brief (3-5 paragraphs) for the duty manager based on the following real-time risk assessment data.
 
-TOP AT-RISK ASSETS (ranked by combined priority score):
+{weather_block}
+TOP AT-RISK ASSETS (ranked by combined priority score, weather-adjusted):
 {asset_block}
 
 CREW PRE-POSITIONING PLAN:
@@ -114,6 +129,7 @@ CREW PRE-POSITIONING PLAN:
 INSTRUCTIONS:
 - Address the duty manager directly.
 - Lead with the most critical asset and WHY it's critical (blast radius, customer impact, lack of backup path — not just failure probability).
+- If weather risk is moderate or high, mention it explicitly and explain how it compounds the sensor-based risk.
 - Mention specific asset IDs, scores, and customer counts.
 - Describe the crew deployment plan with ETAs.
 - If there are unassigned high-risk assets, flag them as requiring additional resources.
@@ -164,23 +180,32 @@ def _call_watsonx(prompt: str) -> str:
             model_id=WATSONX_MODEL_ID,
             api_client=client,
             project_id=project_id,
+        )
+
+        response = model.chat(
+            messages=[{"role": "user", "content": prompt}],
             params={
-                "max_new_tokens": MAX_TOKENS,
+                "max_tokens": MAX_TOKENS,
                 "temperature": 0.3,
                 "top_p": 0.9,
-                "repetition_penalty": 1.1,
             },
         )
 
-        response = model.generate_text(prompt=prompt)
+        # chat() returns a dict; extract the assistant message content
+        result = (
+            response.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "")
+            .strip()
+        )
 
-        if not response or not response.strip():
+        if not result:
             raise RuntimeError(
                 "watsonx.ai returned an empty response. "
                 "Check model availability and quota."
             )
 
-        return response.strip()
+        return result
 
     except Exception as e:
         raise RuntimeError(
@@ -210,6 +235,10 @@ def _generate_stub_brief(ranked_assets: list[dict], crew_plan: dict) -> str:
             "[STUB MODE — watsonx credentials not configured]\n\n"
             "No at-risk assets detected in the current assessment window."
         )
+
+    # Extract weather context
+    weather_risk = top[0].get("weather_risk", "low")
+    weather_multiplier = top[0].get("weather_multiplier", 1.0)
 
     # ── Paragraph 1: Lead with the most critical asset ────────────────
     a1 = top[0]
@@ -275,9 +304,20 @@ def _generate_stub_brief(ranked_assets: list[dict], crew_plan: dict) -> str:
             f"additional crew resources."
         )
 
-    # ── Paragraph 4: Recommended actions ──────────────────────────────
+    # ── Paragraph 4: Weather context & recommended actions ────────────
+    if weather_risk in ("moderate", "high"):
+        weather_note = (
+            f"Live weather data shows {weather_risk} storm risk for the grid area "
+            f"(priority scores scaled ×{weather_multiplier:.2f}). "
+            f"Adverse conditions compound sensor-based degradation signals and can "
+            f"precipitate failures that would otherwise remain latent for days. "
+        )
+    else:
+        weather_note = "Current weather conditions are within normal operational tolerance. "
+
     para4 = (
-        f"Recommended actions: Dispatch {assignments[0]['crew_id'] if assignments else 'nearest available crew'} "
+        weather_note
+        + f"Recommended actions: Dispatch {assignments[0]['crew_id'] if assignments else 'nearest available crew'} "
         f"to {a1['asset_id']} immediately for on-site inspection. "
         f"Coordinate with system control to prepare load-shedding procedures "
         f"for affected feeders if conditions deteriorate. "

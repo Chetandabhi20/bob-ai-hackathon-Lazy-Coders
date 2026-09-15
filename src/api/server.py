@@ -12,7 +12,7 @@ Endpoints:
   GET  /api/asset/{id}/health  → single-asset health assessment
   GET  /api/weather            → weather forecast + risk
   GET  /api/crew-plan          → crew pre-positioning plan
-  POST /api/chat               → incident brief (narrative)
+  POST /api/chat               → conversational AI with intent routing
 
 Run:
   python -m api.server
@@ -20,7 +20,11 @@ Run:
 
 import json
 import logging
+import re
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -134,18 +138,156 @@ def api_crew_plan():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Intent routing helpers ────────────────────────────────────────────────
+
+# Known asset ID patterns present in grid_topology.json
+_ASSET_ID_RE = re.compile(
+    r'\b((?:TX|FDR|SUB)-\d{3})\b', re.IGNORECASE
+)
+
+# Lat/lon for the Vadodara grid (used as default for weather queries)
+_DEFAULT_LAT = 22.31
+_DEFAULT_LON = 73.18
+
+def _route_intent(message: str) -> dict:
+    """
+    Parse the user message and return the appropriate tool response.
+
+    Intents (checked in order):
+      1. Asset health  — message contains a valid asset ID (e.g. "TX-001")
+      2. Weather risk  — message contains weather/storm/temperature keywords
+      3. Crew plan     — message contains crew/deploy/dispatch keywords
+      4. Incident brief (default fallback)
+    """
+    text = message.strip()
+
+    # ── Intent 1: specific asset health ──────────────────────────────────
+    match = _ASSET_ID_RE.search(text)
+    if match:
+        asset_id = match.group(1).upper()
+        try:
+            data = get_asset_health(asset_id)
+        except ValueError as exc:
+            return {
+                "intent": "asset_health",
+                "asset_id": asset_id,
+                "error": str(exc),
+                "brief": str(exc),
+            }
+        prob_pct = round(data["failure_probability_14d"] * 100, 1)
+        backup = "no backup path — fully exposed" if not data["has_backup_path"] else "backup path available"
+        critical = ", ".join(data["critical_loads_at_risk"]) or "none"
+        signals = ", ".join(data["top_contributing_signals"][:4])
+        brief = (
+            f"**{data['asset_name']} ({asset_id})** — {data['asset_type'].capitalize()}\n\n"
+            f"**Combined Priority Score:** {data['combined_priority_score']:.1f} / 100\n"
+            f"**Failure Probability (14d):** {prob_pct}%\n"
+            f"**Blast Radius Score:** {data['blast_radius_score']:.1f}\n"
+            f"**Customers at Risk:** {data['customers_at_risk']:,}\n"
+            f"**Critical Loads:** {critical}\n"
+            f"**Backup Path:** {backup}\n\n"
+            f"**Top Risk Signals:** {signals}\n\n"
+        )
+        if data.get("latest_readings"):
+            r = data["latest_readings"]
+            brief += (
+                f"**Latest Readings** (as of {r['timestamp'][:10]}):\n"
+                f"- Temperature: {r['temperature_c']}°C\n"
+                f"- Vibration: {r['vibration_mm_s']} mm/s\n"
+                f"- Partial Discharge: {r['partial_discharge_pc']} pC\n"
+                f"- Oil Quality Index: {r['oil_quality_index']}\n"
+            )
+        return {
+            "intent": "asset_health",
+            "asset_id": asset_id,
+            "brief": brief,
+            "data": data,
+        }
+
+    # ── Intent 2: weather risk ────────────────────────────────────────────
+    weather_keywords = {"weather", "storm", "wind", "rain", "temperature", "forecast", "heatwave", "heat"}
+    if any(kw in text.lower() for kw in weather_keywords):
+        try:
+            data = get_weather_risk(_DEFAULT_LAT, _DEFAULT_LON, days=7)
+        except WeatherClientError as exc:
+            return {"intent": "weather", "error": str(exc), "brief": f"Weather API error: {exc}"}
+        risk = data["overall_risk"].upper()
+        days_summary = []
+        for d in data["forecast"][:5]:
+            days_summary.append(
+                f"- {d['date']}: max {d['temp_max_c']}°C, "
+                f"wind {d['wind_speed_kph']} kph, "
+                f"precip {d['precip_mm']} mm — **{d['storm_risk']}** risk"
+            )
+        brief = (
+            f"**Weather Risk for Grid Area** (Lat {_DEFAULT_LAT}, Lon {_DEFAULT_LON})\n\n"
+            f"**Overall 7-Day Risk: {risk}**\n\n"
+            + "\n".join(days_summary)
+            + "\n\n"
+            + (
+                "⚠️ **High storm risk detected.** Assets without backup paths are especially "
+                "vulnerable — consider pre-positioning crews now."
+                if data["overall_risk"] == "high"
+                else "Storm conditions are within normal operational tolerance."
+            )
+        )
+        return {"intent": "weather", "brief": brief, "data": data}
+
+    # ── Intent 3: crew deployment plan ───────────────────────────────────
+    crew_keywords = {"crew", "deploy", "dispatch", "assignment", "eta", "maintenance", "send", "position"}
+    if any(kw in text.lower() for kw in crew_keywords):
+        data = generate_crew_plan()
+        lines = []
+        for a in data["assignments"]:
+            lines.append(
+                f"- **{a['crew_id']}** → **{a['assigned_asset_id']}** "
+                f"(rank #{a['priority_rank']}, ETA {a['eta_minutes']} min)\n"
+                f"  _{a['reason']}_"
+            )
+        unassigned = data.get("unassigned_high_risk_assets", [])
+        brief = (
+            f"**Current Crew Deployment Plan**\n\n"
+            + "\n".join(lines)
+        )
+        if unassigned:
+            brief += (
+                f"\n\n⚠️ **Unassigned High-Risk Assets:** {', '.join(unassigned)}\n"
+                f"Additional crew resources are needed to cover these assets."
+            )
+        return {
+            "intent": "crew_plan",
+            "brief": brief,
+            "crew_assignments": len(data["assignments"]),
+            "data": data,
+        }
+
+    # ── Intent 4: default — full incident brief ───────────────────────────
+    result = generate_incident_brief(5)
+    result["intent"] = "incident_brief"
+    return result
+
+
 @app.post("/api/chat")
 def api_chat(body: dict = None):
-    """Generate an incident brief (narrative response)."""
+    """
+    Conversational AI endpoint with intent routing.
+
+    Accepts a JSON body with a 'message' field (the user's typed query).
+    Routes to the correct tool based on intent detected in the message:
+      - Asset ID mentioned  → get_asset_health
+      - Weather keywords    → get_weather_risk
+      - Crew keywords       → generate_crew_plan
+      - Anything else       → generate_incident_brief (full brief)
+    """
     try:
-        top_n = 5
-        if body and "top_n" in body:
-            top_n = int(body["top_n"])
-        return generate_incident_brief(top_n)
+        message = ""
+        if body and "message" in body:
+            message = str(body["message"])
+        return _route_intent(message)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.exception("Error generating brief")
+        logger.exception("Error in chat routing")
         raise HTTPException(status_code=500, detail=str(e))
 
 

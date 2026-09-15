@@ -2,51 +2,71 @@
 
 ## System Architecture
 
-[Describe the overall architecture of your system. Replace the Mermaid diagram below with your actual architecture.]
+The Grid Guardian architecture is designed to cleanly separate the complex analytical backend (Risk Engine) from the conversational AI integration (IBM Bob via FastMCP) and the visual presentation (React Dashboard).
 
 ```mermaid
 graph TD
-    A[User / Browser] -->|HTTP| B[Frontend - React]
-    B -->|REST API| C[Backend - FastAPI]
-    C -->|SDK| D[watsonx.ai]
-    C -->|Query| E[PostgreSQL]
-    C -->|Publish| F[Slack Webhook]
-    D -->|Inference Result| C
+    A[Grid Ops User / Bob CLI] -->|Natural language query| B[IBM Bob]
+    B -->|MCP stdio transport| C[Grid Guardian MCP Server - FastMCP]
+    C -->|Tool: generate_incident_brief| D[watsonx.ai - Granite]
+    C -->|Tool: rank_at_risk_assets| E[Risk Engine - ML + Blast Radius]
+    C -->|Tool: generate_crew_plan| F[Crew Planner - Haversine Optimizer]
+    C -->|Tool: get_weather_risk| G[Open-Meteo Live API]
+    C -->|Tool: get_asset_health| E
+    E -->|Load Data| H[(grid_topology.json + sensor_readings.csv)]
+    D -->|Narrative Brief| B
+    B -->|Response| A
+
+    I[React Dashboard] -->|REST /api/*| J[FastAPI Proxy]
+    J -->|Same Python functions| C
 ```
 
 ## Components
 
 | Component | Technology | Responsibility |
 |---|---|---|
-| Frontend | [e.g., React 18] | [e.g., Dashboard UI, user interaction] |
-| Backend API | [e.g., FastAPI] | [e.g., Business logic, orchestration] |
-| AI / ML | [e.g., watsonx.ai] | [e.g., Anomaly scoring, classification] |
-| Database | [e.g., PostgreSQL] | [e.g., Storing pipeline events and scores] |
-| Notifications | [e.g., Slack API] | [e.g., Alerting on threshold breaches] |
+| Frontend | React (Vite) | Renders the SVG Grid Map, ranked asset tables, and the Chat panel. |
+| API Proxy | FastAPI | Proxies HTTP requests from the frontend into the local Python environment. |
+| Risk Engine | Python (scikit-learn) | Predicts failure probabilities using Gradient Boosting and computes Blast Radius graphs. |
+| MCP Server | FastMCP | Exposes Risk Engine capabilities as Model Context Protocol tools. |
+| LLM Layer | watsonx.ai (Granite) | Synthesizes complex ranked JSON data into plain English operational briefs. |
+| Data Tier | Local JSON/CSV | Simulated historical and live telemetry data generated for the hackathon. |
 
 ## Data Flow
 
-[Describe how data moves through your system from input to output.]
+1. The frontend Dashboard requests risk data via REST to the FastAPI proxy.
+2. The proxy calls the Python tool functions (e.g., `rank_at_risk_assets`).
+3. The Risk Engine loads `grid_topology.json` and `sensor_readings.csv`, runs the sklearn prediction model, calculates the graph blast radius, and returns a combined score.
+4. When the user queries the Chat Panel, the proxy invokes `generate_incident_brief`, which pulls the top-ranked assets, runs the geospatial crew planner, and pipes that structured JSON prompt to the watsonx.ai Granite model.
+5. The Granite model returns a natural-language brief, which flows back up to the React Chat UI.
 
-1. [e.g., Pipeline logs are ingested via a webhook from GitHub Actions]
-2. [e.g., Logs are preprocessed and chunked into 512-token segments]
-3. [e.g., Each chunk is sent to the watsonx.ai inference endpoint]
-4. [e.g., Anomaly scores are stored in PostgreSQL]
-5. [e.g., The React dashboard polls the API every 30 seconds to refresh]
+## IBM Bob Integration (Primary Interface)
+
+**Bob is the primary interface for Grid Guardian.** The MCP server is registered
+in `.bob/mcp.json` and Bob invokes all 5 tools natively via the MCP stdio
+transport. Every capability in the system — risk ranking, asset health, weather
+fusion, crew planning, and watsonx narrative generation — is accessible through
+natural language queries to Bob.
+
+The React dashboard is a **secondary visual layer** that calls the same
+underlying Python tool functions via a FastAPI proxy, so both interfaces always
+produce identical results from the same risk engine.
+
+**Bob is the only path to `generate_incident_brief`** — the tool that chains
+the entire pipeline end-to-end and calls watsonx.ai. Without the MCP server,
+this chain cannot be invoked.
+
+See [`docs/bob-demo.md`](bob-demo.md) for a full live session transcript with
+real output from all 5 MCP tools.
 
 ## Security Considerations
 
-[Note any security decisions relevant to the architecture — even if basic.]
-
-- [e.g., API keys stored in environment variables, never committed to git]
-- [e.g., All API routes require a Bearer token]
-- [e.g., Database credentials rotated via IBM Secrets Manager]
+- The `WATSONX_API_KEY` is strictly loaded via python-dotenv and is not exposed to the Vite frontend.
+- The FastAPI backend uses CORS restricted specifically to the local Vite dev server port.
 
 ## Scalability Notes
 
-[Optional: how would this scale beyond the hackathon prototype?]
-
-[e.g., "The FastAPI backend is stateless and could be horizontally scaled behind a load balancer. The watsonx.ai calls are the bottleneck and would benefit from request batching."]
+For production, the file-based CSV storage would be replaced by a time-series database (like InfluxDB) and a graph database (like Neo4j) to compute the blast radius traversal across millions of nodes in real-time. The FastMCP layer would scale horizontally behind a load balancer.
 
 ---
 

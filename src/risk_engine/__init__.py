@@ -2,23 +2,34 @@
 Risk Engine — Grid Guardian
 ============================
 
-Package-level API combining failure probability (model.py) and blast-radius
-impact scoring (blast_radius.py) into a unified ranked risk output matching
-PROJECT_GUIDE Section 5.5.
+Package-level API combining failure probability (model.py), blast-radius
+impact scoring (blast_radius.py), and live weather risk into a unified ranked
+risk output matching PROJECT_GUIDE Section 5.5.
 
-Combined Priority Score Formula:
-  combined_priority_score = (failure_probability_14d * 40) + (blast_radius_score * 0.6)
+Combined Priority Score Formula (weather-fused):
+  base_score = (failure_probability_14d * 40) + (blast_radius_score * 0.6)
+  combined_priority_score = base_score * weather_multiplier
+
+  Weather multiplier (applied to every asset in the grid):
+    "high"     storm risk → × 1.20  (+20% urgency — conditions accelerate failure)
+    "moderate" storm risk → × 1.10  (+10% urgency)
+    "low"      storm risk → × 1.00  (no adjustment)
 
   - Probability component: 0–40 points (40% weight)
   - Blast radius component: 0–60 points (60% weight)
+  - Weather multiplier scales the final score; capped at 100.
   - Total: 0–100
 
-  Why 40/60? The project's core differentiator is that blast radius matters
-  more than probability alone. An asset with 30% failure probability but a
-  blast radius of 80 (hospital, no backup, many customers) should outrank
-  one with 90% probability but a blast radius of 5 (small redundant feeder).
+  Why weather fusion?
+    The problem statement explicitly calls out that "a degrading transformer
+    might survive a mild week but fail catastrophically during an impending
+    heatwave." Fusing the live weather multiplier means the ranked list
+    automatically re-prioritizes all assets upward when a storm is incoming,
+    reflecting real operational urgency. Weather is fetched from Open-Meteo
+    (free, live, no API key) using the grid centre coordinates.
 """
 
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -39,10 +50,41 @@ from risk_engine.features import (
     load_topology_ages,
 )
 
+logger = logging.getLogger(__name__)
 
 # Weight split: probability vs blast radius
 PROB_WEIGHT = 40.0    # max 40 points from probability
 BLAST_WEIGHT = 0.6    # blast_radius_score * 0.6, max 60 points
+
+# Weather multipliers — how much an incoming storm escalates priority
+_WEATHER_MULTIPLIERS = {"high": 1.20, "moderate": 1.10, "low": 1.00}
+
+# Grid centre coordinates (Vadodara) used for weather lookup
+_GRID_LAT = 22.31
+_GRID_LON = 73.18
+
+
+def _get_weather_multiplier() -> tuple[float, str]:
+    """
+    Fetch live weather for the grid area and return (multiplier, overall_risk).
+
+    Falls back to (1.0, "low") silently if the weather API is unreachable,
+    so that an offline environment never breaks the risk ranking.
+    """
+    try:
+        from data.weather_client import get_forecast, WeatherClientError
+        result = get_forecast(_GRID_LAT, _GRID_LON, days=3)
+        risk_levels = {"low": 0, "moderate": 1, "high": 2}
+        risk_names = {0: "low", 1: "moderate", 2: "high"}
+        max_risk = max(
+            (risk_levels.get(d["storm_risk"], 0) for d in result["forecast"]),
+            default=0,
+        )
+        overall = risk_names[max_risk]
+        return _WEATHER_MULTIPLIERS[overall], overall
+    except Exception as exc:
+        logger.warning("Weather lookup failed, using multiplier=1.0: %s", exc)
+        return 1.0, "low"
 
 
 def rank_assets(
@@ -50,11 +92,12 @@ def rank_assets(
     readings_path: Path | None = None,
     as_of_date: datetime | None = None,
     top_n: int | None = None,
+    weather_multiplier: float | None = None,
 ) -> list[dict]:
     """
     Produce the full ranked risk output for all assets.
 
-    Each entry matches PROJECT_GUIDE Section 5.5 schema:
+    Each entry matches PROJECT_GUIDE Section 5.5 schema plus two extra fields:
     {
       "asset_id": str,
       "failure_probability_14d": float,
@@ -62,8 +105,10 @@ def rank_assets(
       "customers_at_risk": int,
       "critical_loads_at_risk": list[str],
       "has_backup_path": bool,
-      "combined_priority_score": float,
-      "top_contributing_signals": list[str]
+      "combined_priority_score": float,   ← weather-fused
+      "top_contributing_signals": list[str],
+      "weather_risk": str,                ← "low" | "moderate" | "high"
+      "weather_multiplier": float         ← 1.0 | 1.1 | 1.2
     }
 
     Args:
@@ -71,6 +116,9 @@ def rank_assets(
         readings_path: Path to sensor_readings.csv. Defaults to generated data.
         as_of_date: Evaluation date for features. Defaults to SIMULATION_CURRENT_DATE.
         top_n: If set, return only top N assets. None = return all.
+        weather_multiplier: Override the live weather multiplier (useful for
+            tests or when the caller has already fetched weather). If None,
+            the function fetches live weather from Open-Meteo.
 
     Returns:
         List of dicts sorted by combined_priority_score descending.
@@ -83,6 +131,13 @@ def rank_assets(
         readings_path = data_dir / "sensor_readings.csv"
     if as_of_date is None:
         as_of_date = SIMULATION_CURRENT_DATE
+
+    # Fetch live weather multiplier (or use override)
+    if weather_multiplier is not None:
+        w_multiplier = weather_multiplier
+        w_risk = "override"
+    else:
+        w_multiplier, w_risk = _get_weather_multiplier()
 
     # Load data
     topology = load_topology(topology_path)
@@ -105,9 +160,11 @@ def rank_assets(
         prob = probabilities[asset_id]
         blast = blast_results[asset_id]
 
-        # Combined priority score
-        combined = (prob * PROB_WEIGHT) + (blast["blast_radius_score"] * BLAST_WEIGHT)
-        combined = min(100.0, round(combined, 1))
+        # Base score (probability + blast radius)
+        base_score = (prob * PROB_WEIGHT) + (blast["blast_radius_score"] * BLAST_WEIGHT)
+
+        # Apply weather multiplier — storms escalate urgency for all assets
+        combined = min(100.0, round(base_score * w_multiplier, 1))
 
         # Top contributing signals from the ML model
         signals = get_top_contributing_signals(model, features_df, asset_id, top_n=3)
@@ -118,6 +175,10 @@ def rank_assets(
         if blast["critical_loads_at_risk"]:
             for load in blast["critical_loads_at_risk"]:
                 signals.append(f"serves_{load}")
+
+        # Add weather signal when storm risk is elevated
+        if w_risk in ("moderate", "high"):
+            signals.append(f"storm_risk_{w_risk}")
 
         # Deduplicate while preserving order
         seen = set()
@@ -136,6 +197,8 @@ def rank_assets(
             "has_backup_path": blast["has_backup_path"],
             "combined_priority_score": combined,
             "top_contributing_signals": unique_signals,
+            "weather_risk": w_risk,
+            "weather_multiplier": w_multiplier,
         })
 
     # Sort by combined score descending
