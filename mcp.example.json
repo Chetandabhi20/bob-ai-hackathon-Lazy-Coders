@@ -1,16 +1,38 @@
 {
-  "mcpServers": {
-    "grid-guardian": {
-      "command": "python",
-      "args": ["-m", "mcp_server"],
-      "cwd": "<ABSOLUTE_PATH_TO_YOUR_CLONED_REPO>/src",
-      "alwaysAllow": [
-        "get_asset_health",
-        "get_weather_risk",
-        "rank_at_risk_assets",
-        "generate_crew_plan",
-        "generate_incident_brief"
-      ]
+  "_comment": "Grid Guardian MCP Server — two connection modes. Copy the one that fits your setup into .bob/mcp.json",
+
+  "_option_A_remote": {
+    "_description": "RECOMMENDED FOR JUDGES — connect to the live deployed server. No local setup needed.",
+    "mcpServers": {
+      "grid-guardian": {
+        "type": "streamable-http",
+        "url": "https://grid-guardian-production.up.railway.app/mcp",
+        "alwaysAllow": [
+          "get_asset_health",
+          "get_weather_risk",
+          "rank_at_risk_assets",
+          "generate_crew_plan",
+          "generate_incident_brief"
+        ]
+      }
+    }
+  },
+
+  "_option_B_local": {
+    "_description": "Local stdio — run the MCP server on your own machine after cloning the repo.",
+    "mcpServers": {
+      "grid-guardian": {
+        "command": "python",
+        "args": ["-m", "mcp_server"],
+        "cwd": "<ABSOLUTE_PATH_TO_YOUR_CLONED_REPO>/src",
+        "alwaysAllow": [
+          "get_asset_health",
+          "get_weather_risk",
+          "rank_at_risk_assets",
+          "generate_crew_plan",
+          "generate_incident_brief"
+        ]
+      }
     }
   }
 }

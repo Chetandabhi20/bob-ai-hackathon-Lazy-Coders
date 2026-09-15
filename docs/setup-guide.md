@@ -2,9 +2,45 @@
 
 > **This file is read by the automated evaluation pipeline. Be precise and complete.**
 
-## Prerequisites
+## Live Deployment (Fastest — No Setup Required)
 
-Before you begin, ensure you have the following installed:
+The application is deployed on Railway. Judges can use it immediately:
+
+| Resource | URL |
+|---|---|
+| **Live Dashboard** | https://grid-guardian-production.up.railway.app |
+| **Remote MCP (Bob)** | https://grid-guardian-production.up.railway.app/mcp |
+| **API Docs** | https://grid-guardian-production.up.railway.app/docs |
+
+### Connect IBM Bob to the live MCP server (30 seconds)
+
+Create or edit `.bob/mcp.json` in your Bob IDE workspace and add:
+
+```json
+{
+  "mcpServers": {
+    "grid-guardian": {
+      "type": "streamable-http",
+      "url": "https://grid-guardian-production.up.railway.app/mcp",
+      "alwaysAllow": [
+        "get_asset_health",
+        "get_weather_risk",
+        "rank_at_risk_assets",
+        "generate_crew_plan",
+        "generate_incident_brief"
+      ]
+    }
+  }
+}
+```
+
+Then ask Bob: *"Give me a full incident brief for the duty manager"*
+
+---
+
+## Local Setup Prerequisites
+
+Only needed if running locally. The live deployment above requires nothing.
 
 - [x] Python 3.11+
 - [x] Node.js 20+
@@ -100,24 +136,34 @@ The `grid-guardian` MCP server in `.bob/mcp.json` will now register automaticall
 
 ---
 
-### Option B — React Dashboard (Visual Interface)
+### Option B — React Dashboard (Visual Interface, Local Dev)
 
 You will need two terminal windows.
 
-**Terminal 1: Start the Backend API Server**
+**Terminal 1: Start the Unified Backend Server**
 ```bash
 cd src
 # (Ensure venv is activated)
 python -m api.server
+# Serves: REST API at :8001/api/*, MCP at :8001/mcp
 ```
 
-**Terminal 2: Start the React Frontend**
+**Terminal 2: Start the React Frontend (dev mode)**
 ```bash
 cd src/frontend
 npm run dev
 ```
 
 The dashboard will be available at: `http://localhost:5173`
+
+**To test the full production layout locally** (FastAPI serving built React):
+```bash
+# Build the frontend first
+cd src/frontend && npm run build && cd ..
+# Then start the unified server — it auto-detects the dist folder
+python -m api.server
+# Visit http://localhost:8001 — dashboard + /mcp + /api/* all on one port
+```
 
 ## Running Tests
 
@@ -132,5 +178,8 @@ pytest tests/ -v
 | Issue | Solution |
 |---|---|
 | `ModuleNotFoundError` | Ensure your virtual environment is activated and `pip install -r requirements.txt` was run. |
-| Chat Panel says "STUB MODE" | This is expected if `WATSONX_API_KEY` is not set. To use live watsonx generation, add real credentials to `src/.env`. |
-| Connection Refused in UI | Ensure the Python backend (`python -m api.server`) is running on port 8001. |
+| Chat Panel says "STUB MODE" | Expected when `WATSONX_API_KEY` is not set. Add real credentials to `src/.env` for live Granite generation. |
+| Connection Refused in UI | Ensure `python -m api.server` is running on port 8001. |
+| Bob says "No tools found" | Check `.bob/mcp.json` exists and uses the correct URL or local path. |
+| Railway deploy fails | Check build logs — ensure `nixpacks.toml` is present and `npm run build` succeeds. |
+| MCP /mcp returns 404 | FastMCP version must be ≥ 2.0.0; run `pip install fastmcp --upgrade` |

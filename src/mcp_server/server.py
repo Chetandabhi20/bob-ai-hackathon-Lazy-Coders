@@ -12,8 +12,12 @@ Tools registered:
   - generate_crew_plan(...)         -> crew pre-positioning assignments
   - generate_incident_brief(top_n)  -> end-to-end narrative brief (Phase 4)
 
-Run:
-  python -m mcp_server              (stdio transport, for MCP clients)
+Run modes:
+  python -m mcp_server              (stdio transport — for local Bob)
+  Mounted at /mcp via api/server.py (Streamable HTTP — for remote Bob)
+
+The `mcp` instance is exported so api/server.py can mount it as an ASGI
+app at the /mcp path, enabling remote Bob connections over HTTP.
 """
 
 import os
@@ -43,8 +47,18 @@ from mcp_server.tools.generate_incident_brief import (
 )
 
 
-# Create the MCP server instance
-mcp = FastMCP("Grid Guardian")
+# Create the MCP server instance.
+# Exported as `mcp` so api/server.py can call mcp.http_app() to mount
+# the Streamable HTTP transport at /mcp for remote Bob connections.
+mcp = FastMCP(
+    "Grid Guardian",
+    instructions=(
+        "You are connected to Grid Guardian, an AI-powered electrical grid "
+        "risk-assessment system. Use the available tools to query real-time "
+        "asset health, weather risk, ranked failure predictions, crew deployment "
+        "plans, and generate natural-language incident briefs for grid operators."
+    ),
+)
 
 
 # ---------------------------------------------------------------------------

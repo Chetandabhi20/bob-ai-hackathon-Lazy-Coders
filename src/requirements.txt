@@ -1,11 +1,13 @@
 # Grid Guardian — Python Dependencies
-# Base packages needed from the start; more will be added per-phase.
 
-# Web framework (MCP server / API)
+# Web framework (REST API + static file serving)
 fastapi>=0.115.0
-uvicorn>=0.30.0
+uvicorn[standard]>=0.30.0
 
-# Data & ML (Phase 1–2)
+# Static file serving for the React SPA (production)
+aiofiles>=23.0.0
+
+# Data & ML
 pandas>=2.2.0
 numpy>=1.26.0
 scikit-learn>=1.5.0
@@ -13,13 +15,13 @@ scikit-learn>=1.5.0
 # HTTP client (weather API)
 httpx>=0.27.0
 
-# MCP server (Phase 3)
+# MCP server — Streamable HTTP (remote Bob) + stdio (local Bob)
 fastmcp>=2.0.0
 
-# IBM watsonx.ai (Phase 4)
+# IBM watsonx.ai
 ibm-watsonx-ai>=1.7.0
 
-# Serialization
+# Environment
 python-dotenv>=1.0.0
 
 # Testing

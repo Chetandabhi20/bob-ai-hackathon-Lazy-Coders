@@ -6,6 +6,43 @@
 
 ---
 
+## Quick Connect (Judges — 30 seconds)
+
+The MCP server is **deployed live on Railway**. No cloning, no Python, no
+`pip install` required. Paste this JSON into your Bob IDE's MCP config and
+all 5 Grid Guardian tools appear instantly:
+
+```json
+{
+  "mcpServers": {
+    "grid-guardian": {
+      "type": "streamable-http",
+      "url": "https://grid-guardian-production.up.railway.app/mcp",
+      "alwaysAllow": [
+        "get_asset_health",
+        "get_weather_risk",
+        "rank_at_risk_assets",
+        "generate_crew_plan",
+        "generate_incident_brief"
+      ]
+    }
+  }
+}
+```
+
+**Live dashboard:** https://grid-guardian-production.up.railway.app
+
+Then ask Bob:
+```
+"What assets are at risk right now?"
+"Give me the full health report for TX-001"
+"What is the current weather risk for the grid?"
+"Deploy crews to the highest-risk assets"
+"Give me a full incident brief for the duty manager"
+```
+
+---
+
 ## What "Load-Bearing" Means Here
 
 Remove the MCP server and Bob cannot answer a single question about the grid.
@@ -15,46 +52,61 @@ incident brief. Bob does not access any other data source — every answer it
 gives flows through these tools.
 
 ```
-[Bob CLI]
+[Bob CLI / Bob IDE]
     │
-    │  MCP (stdio transport)
+    │  Option A: Streamable HTTP  ──► https://grid-guardian-production.up.railway.app/mcp
+    │  Option B: stdio (local)    ──► python -m mcp_server
     ▼
 [Grid Guardian MCP Server]   ← src/mcp_server/server.py
     │
     ├── get_asset_health()       → risk_engine + sensor CSV
-    ├── get_weather_risk()       → Open-Meteo live API
-    ├── rank_at_risk_assets()    → risk_engine (ML + blast-radius)
-    ├── generate_crew_plan()     → crew_planner (Haversine optimizer)
-    └── generate_incident_brief()→ all of the above + watsonx.ai
+    ├── get_weather_risk()       → Open-Meteo live API  (real, not cached)
+    ├── rank_at_risk_assets()    → risk_engine (ML + blast-radius + weather fusion)
+    ├── generate_crew_plan()     → crew_planner (Haversine geospatial optimizer)
+    └── generate_incident_brief()→ all of the above + watsonx.ai Granite
 ```
 
 ---
 
-## Setup: Connecting Bob to the MCP Server
+## Setup Option A — Remote (Recommended for Judges)
+
+No local setup. The server is already running.
+
+1. **Open your Bob IDE** settings and find the MCP configuration section
+2. **Add the config block** from the "Quick Connect" section above
+3. **Done** — all 5 tools are available. Ask Bob anything about the grid.
+
+---
+
+## Setup Option B — Local (Clone and Run)
 
 1. **Install IBM Bob** — follow https://www.ibm.com/docs/en/bob
 
-2. **Activate the virtual environment and confirm the MCP server runs:**
+2. **Clone and install:**
    ```bash
-   cd src
-   .\.venv\Scripts\activate          # Windows
-   # source .venv/bin/activate       # Mac/Linux
-   python -m mcp_server              # should start without errors
+   git clone https://github.com/Chetandabhi20/-bob-ai-hackathon-Lazy-Coders.git
+   cd bob-ai-hackathon-Lazy-Coders/src
+   python -m venv .venv
+   .\.venv\Scripts\activate     # Windows
+   # source .venv/bin/activate  # Mac/Linux
+   pip install -r requirements.txt
    ```
 
-3. **Register the MCP server with Bob** — Because the template ignores `.bob` folders, you must create it manually from the provided example:
+3. **Create the Bob config** (`.bob` is git-ignored, create it manually):
    ```bash
    mkdir .bob
    cp mcp.example.json .bob/mcp.json
    ```
-   Open `.bob/mcp.json` and replace `<ABSOLUTE_PATH_TO_YOUR_CLONED_REPO>` with the absolute path where you cloned the repository. Ensure the `command` correctly points to your python executable.
+   Open `.bob/mcp.json`, copy the `_option_B_local` block into a clean
+   `mcp.json`, and replace `<ABSOLUTE_PATH_TO_YOUR_CLONED_REPO>` with the
+   actual path on your machine.
 
-4. **Open Bob** in the repo root directory. The `grid-guardian` MCP server
-   will start automatically. You should see the 5 tools available.
+4. **Open Bob** in the repo root. The `grid-guardian` MCP server starts
+   automatically via stdio.
 
-5. **Copy `src/.env.example` to `src/.env`** and optionally add watsonx
-   credentials. Without credentials the system runs in STUB mode (still
-   fully functional, just uses a template narrator instead of Granite).
+5. **Optional — watsonx credentials:** Copy `src/.env.example` to `src/.env`
+   and add real `WATSONX_API_KEY` / `WATSONX_PROJECT_ID`. Without them the
+   system runs in STUB mode (still fully functional).
 
 ---
 

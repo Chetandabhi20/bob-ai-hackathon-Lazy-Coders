@@ -1,10 +1,15 @@
 """
-Grid Guardian — REST API Backend
-==================================
+Grid Guardian — Unified Server
+================================
 
-Thin FastAPI layer that wraps the MCP tool functions as HTTP endpoints
-for the React frontend. This is separate from the MCP server (stdio) —
-both call the same underlying Python functions.
+Single process that serves:
+  1. REST API      — /api/*      (React dashboard backend)
+  2. MCP HTTP      — /mcp        (Streamable HTTP for remote Bob connections)
+  3. Static files  — /           (pre-built Vite/React frontend)
+
+This unified layout means one Railway service, one URL, handles everything:
+  - Judges visit https://<app>.up.railway.app  → see the React dashboard
+  - Judges point Bob at https://<app>.up.railway.app/mcp → use all 5 tools
 
 Endpoints:
   GET  /api/topology           → grid topology + risk scores
@@ -13,21 +18,26 @@ Endpoints:
   GET  /api/weather            → weather forecast + risk
   GET  /api/crew-plan          → crew pre-positioning plan
   POST /api/chat               → conversational AI with intent routing
+  ANY  /mcp                    → FastMCP Streamable HTTP transport (Bob)
+  GET  /                       → React SPA (production build)
 
-Run:
+Run locally:
   python -m api.server
 """
 
 import json
 import logging
+import os
 import re
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from mcp_server.tools.get_asset_health import get_asset_health
 from mcp_server.tools.get_weather_risk import get_weather_risk
@@ -40,20 +50,36 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Grid Guardian API",
-    description="REST API for the Grid Guardian frontend dashboard",
+    description=(
+        "REST API + MCP Streamable HTTP server for Grid Guardian. "
+        "Connect IBM Bob to /mcp for live grid intelligence tools."
+    ),
     version="1.0.0",
 )
 
-# Allow CORS from the Vite dev server
+# CORS: allow Vite dev server locally AND any Railway/deployed origin
+_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8001",
+]
+_RAILWAY_URL = os.environ.get("RAILWAY_STATIC_URL", "")
+if _RAILWAY_URL:
+    _ALLOWED_ORIGINS.append(f"https://{_RAILWAY_URL}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.up\.railway\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Path to generated data
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "generated"
+
+# Path to Vite production build — served as static files in production
+_FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────
@@ -291,12 +317,63 @@ def api_chat(body: dict = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── MCP Streamable HTTP endpoint ──────────────────────────────────────────
+# Mount FastMCP's ASGI app at /mcp so remote Bob clients can connect via:
+#   { "type": "streamable-http", "url": "https://<host>/mcp" }
+
+def _build_mcp_asgi():
+    """Build the FastMCP ASGI app that handles Streamable HTTP transport."""
+    from mcp_server.server import mcp
+    return mcp.http_app(path="/")   # path is relative to the mount point
+
+try:
+    _mcp_asgi = _build_mcp_asgi()
+    app.mount("/mcp", _mcp_asgi)
+    logger.info("MCP Streamable HTTP endpoint mounted at /mcp")
+except Exception as _mcp_err:
+    logger.warning("Could not mount MCP ASGI app: %s", _mcp_err)
+
+
+# ── Static files (production React build) ─────────────────────────────────
+# Only mounted when the Vite dist folder exists (i.e. in production on Railway
+# or after running `npm run build` locally). In local dev, Vite's own dev
+# server handles the frontend.
+
+if _FRONTEND_DIST.exists():
+    # Mount static assets (JS/CSS chunks) BEFORE the catch-all route
+    _assets_dir = _FRONTEND_DIST / "assets"
+    if _assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="assets")
+
+    @app.get("/", include_in_schema=False)
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_spa(full_path: str = ""):
+        """Serve the React SPA for any non-API, non-MCP route."""
+        # Don't intercept API or MCP routes
+        if full_path.startswith("api/") or full_path.startswith("mcp"):
+            raise HTTPException(status_code=404)
+        index = _FRONTEND_DIST / "index.html"
+        if index.exists():
+            return FileResponse(str(index))
+        raise HTTPException(status_code=404, detail="Frontend not built. Run: cd src/frontend && npm run build")
+
+    logger.info("Serving React SPA from %s", _FRONTEND_DIST)
+else:
+    logger.info(
+        "Frontend dist not found at %s — serving API only. "
+        "Run `cd src/frontend && npm run build` to enable the dashboard.",
+        _FRONTEND_DIST,
+    )
+
+
 # ── Entry point ───────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import uvicorn
-    import os
 
-    port = int(os.environ.get("MCP_SERVER_PORT", "8001"))
-    print(f"Starting Grid Guardian API on http://localhost:{port}")
+    port = int(os.environ.get("PORT", os.environ.get("MCP_SERVER_PORT", "8001")))
+    print(f"Starting Grid Guardian unified server on http://0.0.0.0:{port}")
+    print(f"  Dashboard : http://localhost:{port}/")
+    print(f"  API docs  : http://localhost:{port}/docs")
+    print(f"  MCP (Bob) : http://localhost:{port}/mcp")
     uvicorn.run(app, host="0.0.0.0", port=port)
