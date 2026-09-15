@@ -1,0 +1,446 @@
+{
+  "nodes": [
+    {
+      "id": "SUB-001",
+      "type": "substation",
+      "name": "Riverside Substation",
+      "lat": 22.31,
+      "lon": 73.18,
+      "customers_served": 12500,
+      "criticality_flags": [
+        "hospital",
+        "water_treatment"
+      ],
+      "has_backup_path": false,
+      "install_year": 1998
+    },
+    {
+      "id": "SUB-002",
+      "type": "substation",
+      "name": "Industrial Area Substation",
+      "lat": 22.34,
+      "lon": 73.22,
+      "customers_served": 8200,
+      "criticality_flags": [
+        "data_center"
+      ],
+      "has_backup_path": true,
+      "install_year": 2010
+    },
+    {
+      "id": "SUB-003",
+      "type": "substation",
+      "name": "University Substation",
+      "lat": 22.29,
+      "lon": 73.25,
+      "customers_served": 4500,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2015
+    },
+    {
+      "id": "TX-001",
+      "type": "transformer",
+      "name": "Riverside North Transformer",
+      "lat": 22.318,
+      "lon": 73.175,
+      "customers_served": 4200,
+      "criticality_flags": [
+        "hospital"
+      ],
+      "has_backup_path": false,
+      "install_year": 1998
+    },
+    {
+      "id": "TX-002",
+      "type": "transformer",
+      "name": "Riverside South Transformer",
+      "lat": 22.302,
+      "lon": 73.183,
+      "customers_served": 4800,
+      "criticality_flags": [
+        "water_treatment"
+      ],
+      "has_backup_path": false,
+      "install_year": 2003
+    },
+    {
+      "id": "TX-003",
+      "type": "transformer",
+      "name": "Riverside East Transformer",
+      "lat": 22.31,
+      "lon": 73.195,
+      "customers_served": 3500,
+      "criticality_flags": [],
+      "has_backup_path": true,
+      "install_year": 2001
+    },
+    {
+      "id": "TX-004",
+      "type": "transformer",
+      "name": "Industrial West Transformer",
+      "lat": 22.345,
+      "lon": 73.21,
+      "customers_served": 2800,
+      "criticality_flags": [],
+      "has_backup_path": true,
+      "install_year": 2010
+    },
+    {
+      "id": "TX-005",
+      "type": "transformer",
+      "name": "Industrial East Transformer",
+      "lat": 22.338,
+      "lon": 73.235,
+      "customers_served": 3200,
+      "criticality_flags": [
+        "data_center"
+      ],
+      "has_backup_path": false,
+      "install_year": 2010
+    },
+    {
+      "id": "TX-006",
+      "type": "transformer",
+      "name": "Industrial Central Transformer",
+      "lat": 22.342,
+      "lon": 73.22,
+      "customers_served": 2200,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2012
+    },
+    {
+      "id": "TX-007",
+      "type": "transformer",
+      "name": "University Main Transformer",
+      "lat": 22.292,
+      "lon": 73.245,
+      "customers_served": 2500,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2015
+    },
+    {
+      "id": "TX-008",
+      "type": "transformer",
+      "name": "University Annex Transformer",
+      "lat": 22.285,
+      "lon": 73.255,
+      "customers_served": 2000,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2016
+    },
+    {
+      "id": "TX-009",
+      "type": "transformer",
+      "name": "Residential Colony Transformer",
+      "lat": 22.298,
+      "lon": 73.26,
+      "customers_served": 1800,
+      "criticality_flags": [
+        "school"
+      ],
+      "has_backup_path": false,
+      "install_year": 2008
+    },
+    {
+      "id": "FDR-001",
+      "type": "feeder",
+      "name": "City Hospital Feeder",
+      "lat": 22.321,
+      "lon": 73.172,
+      "customers_served": 1800,
+      "criticality_flags": [
+        "hospital"
+      ],
+      "has_backup_path": false,
+      "install_year": 1999
+    },
+    {
+      "id": "FDR-002",
+      "type": "feeder",
+      "name": "Market Road Feeder",
+      "lat": 22.316,
+      "lon": 73.169,
+      "customers_served": 2400,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2000
+    },
+    {
+      "id": "FDR-003",
+      "type": "feeder",
+      "name": "Water Plant Feeder",
+      "lat": 22.299,
+      "lon": 73.18,
+      "customers_served": 1200,
+      "criticality_flags": [
+        "water_treatment"
+      ],
+      "has_backup_path": false,
+      "install_year": 2003
+    },
+    {
+      "id": "FDR-004",
+      "type": "feeder",
+      "name": "South Colony Feeder",
+      "lat": 22.298,
+      "lon": 73.187,
+      "customers_served": 3600,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2004
+    },
+    {
+      "id": "FDR-005",
+      "type": "feeder",
+      "name": "Garden Area Feeder",
+      "lat": 22.312,
+      "lon": 73.2,
+      "customers_served": 1900,
+      "criticality_flags": [],
+      "has_backup_path": true,
+      "install_year": 2002
+    },
+    {
+      "id": "FDR-006",
+      "type": "feeder",
+      "name": "Temple Road Feeder",
+      "lat": 22.308,
+      "lon": 73.198,
+      "customers_served": 1600,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2005
+    },
+    {
+      "id": "FDR-007",
+      "type": "feeder",
+      "name": "Data Center Feeder",
+      "lat": 22.336,
+      "lon": 73.238,
+      "customers_served": 800,
+      "criticality_flags": [
+        "data_center"
+      ],
+      "has_backup_path": false,
+      "install_year": 2011
+    },
+    {
+      "id": "FDR-008",
+      "type": "feeder",
+      "name": "Factory Lane Feeder",
+      "lat": 22.34,
+      "lon": 73.24,
+      "customers_served": 2400,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2011
+    },
+    {
+      "id": "FDR-009",
+      "type": "feeder",
+      "name": "Warehouse District Feeder",
+      "lat": 22.344,
+      "lon": 73.225,
+      "customers_served": 1100,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2013
+    },
+    {
+      "id": "FDR-010",
+      "type": "feeder",
+      "name": "Transport Hub Feeder",
+      "lat": 22.34,
+      "lon": 73.217,
+      "customers_served": 1100,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2013
+    },
+    {
+      "id": "FDR-011",
+      "type": "feeder",
+      "name": "Campus Feeder",
+      "lat": 22.293,
+      "lon": 73.242,
+      "customers_served": 1500,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2015
+    },
+    {
+      "id": "FDR-012",
+      "type": "feeder",
+      "name": "Research Park Feeder",
+      "lat": 22.283,
+      "lon": 73.258,
+      "customers_served": 1000,
+      "criticality_flags": [],
+      "has_backup_path": false,
+      "install_year": 2017
+    },
+    {
+      "id": "FDR-013",
+      "type": "feeder",
+      "name": "School Zone Feeder",
+      "lat": 22.296,
+      "lon": 73.263,
+      "customers_served": 1800,
+      "criticality_flags": [
+        "school"
+      ],
+      "has_backup_path": false,
+      "install_year": 2009
+    }
+  ],
+  "edges": [
+    {
+      "from": "SUB-001",
+      "to": "TX-001",
+      "type": "primary",
+      "capacity_kw": 15000
+    },
+    {
+      "from": "SUB-001",
+      "to": "TX-002",
+      "type": "primary",
+      "capacity_kw": 15000
+    },
+    {
+      "from": "SUB-001",
+      "to": "TX-003",
+      "type": "primary",
+      "capacity_kw": 12000
+    },
+    {
+      "from": "SUB-002",
+      "to": "TX-004",
+      "type": "primary",
+      "capacity_kw": 10000
+    },
+    {
+      "from": "SUB-002",
+      "to": "TX-005",
+      "type": "primary",
+      "capacity_kw": 12000
+    },
+    {
+      "from": "SUB-002",
+      "to": "TX-006",
+      "type": "primary",
+      "capacity_kw": 8000
+    },
+    {
+      "from": "SUB-003",
+      "to": "TX-007",
+      "type": "primary",
+      "capacity_kw": 8000
+    },
+    {
+      "from": "SUB-003",
+      "to": "TX-008",
+      "type": "primary",
+      "capacity_kw": 6000
+    },
+    {
+      "from": "SUB-003",
+      "to": "TX-009",
+      "type": "primary",
+      "capacity_kw": 6000
+    },
+    {
+      "from": "TX-001",
+      "to": "FDR-001",
+      "type": "feeder",
+      "capacity_kw": 5000
+    },
+    {
+      "from": "TX-001",
+      "to": "FDR-002",
+      "type": "feeder",
+      "capacity_kw": 5000
+    },
+    {
+      "from": "TX-002",
+      "to": "FDR-003",
+      "type": "feeder",
+      "capacity_kw": 4000
+    },
+    {
+      "from": "TX-002",
+      "to": "FDR-004",
+      "type": "feeder",
+      "capacity_kw": 6000
+    },
+    {
+      "from": "TX-003",
+      "to": "FDR-005",
+      "type": "feeder",
+      "capacity_kw": 5000
+    },
+    {
+      "from": "TX-003",
+      "to": "FDR-006",
+      "type": "feeder",
+      "capacity_kw": 4000
+    },
+    {
+      "from": "TX-005",
+      "to": "FDR-007",
+      "type": "feeder",
+      "capacity_kw": 5000
+    },
+    {
+      "from": "TX-005",
+      "to": "FDR-008",
+      "type": "feeder",
+      "capacity_kw": 5000
+    },
+    {
+      "from": "TX-006",
+      "to": "FDR-009",
+      "type": "feeder",
+      "capacity_kw": 4000
+    },
+    {
+      "from": "TX-006",
+      "to": "FDR-010",
+      "type": "feeder",
+      "capacity_kw": 4000
+    },
+    {
+      "from": "TX-007",
+      "to": "FDR-011",
+      "type": "feeder",
+      "capacity_kw": 4000
+    },
+    {
+      "from": "TX-008",
+      "to": "FDR-012",
+      "type": "feeder",
+      "capacity_kw": 3000
+    },
+    {
+      "from": "TX-009",
+      "to": "FDR-013",
+      "type": "feeder",
+      "capacity_kw": 4000
+    },
+    {
+      "from": "TX-003",
+      "to": "TX-004",
+      "type": "tie",
+      "capacity_kw": 3000
+    },
+    {
+      "from": "SUB-001",
+      "to": "SUB-002",
+      "type": "tie",
+      "capacity_kw": 5000
+    }
+  ]
+}
